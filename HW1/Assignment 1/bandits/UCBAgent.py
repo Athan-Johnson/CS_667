@@ -32,9 +32,9 @@ class UCBAgent:
         
         bestArm = 0
         bestValue = 0
-        for arm in range(len(self.armPulls)):
-            u = np.sqrt((2 * np.log(t)) / self.armPulls[arm])
-            value = (self.armJackpots[arm] / self.armPulls[arm]) + u
+        for arm in range(len(self.armPulls)): # go through each arm
+            u = np.sqrt((2 * np.log(t)) / self.armPulls[arm]) # calculate u
+            value = (self.armJackpots[arm] / self.armPulls[arm]) + u # calculate the mean plus the u
             if value > bestValue:
                 bestArm = arm
                 bestValue = value
