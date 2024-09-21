@@ -7,7 +7,7 @@ import random
 import argparse
 
 class randomAgent: 
-	def __init__(self):
+	def __init__(self, bandit):
 		self.name = "Randy the RandomAgent"
 	
 	def recommendArm(self, bandit, history):

@@ -48,7 +48,7 @@ parser.add_argument('--num_plays', type=int, default = 10000, help='The number o
 args = parser.parse_args()
 
 testBandit = bandit(args.input)
-agent = AGENTS_MAP[args.agent]()
+agent = AGENTS_MAP[args.agent](testBandit)
 history = []
 cumulative_reward = 0
 

@@ -8,15 +8,13 @@ import argparse
 ######################################################
 
 class epsGreedyAgent: 
-    def __init__(self):
+    def __init__(self, bandit):
         self.name = "Eric the Epsilon Greedy Agent"
         
         # code I added
         self.epsilon = 0.1
-        self.armJackpots = [0] * 10 # I know this is hardcoded but it speeds up efficiency
-        self.armAppearances = [0] * 10 # otherwise I have to recompute this each time or pass the bandit in init
-        # passing the bandit means I must modify all other agents
-        # overall it runs faster to hardcode this than use history
+        self.armJackpots = [0] * bandit.getNumArms()
+        self.armPulls = [0] * bandit.getNumArms()
         # ends here
     
     def recommendArm(self, bandit, history):
@@ -24,7 +22,7 @@ class epsGreedyAgent:
         numArms = bandit.getNumArms()
         
         if history:
-            self.armAppearances[history[-1][0]] += 1
+            self.armPulls[history[-1][0]] += 1
             self.armJackpots[history[-1][0]] += history[-1][1]
         
         # random arm is pulled
@@ -36,13 +34,12 @@ class epsGreedyAgent:
             bestReward = 0
             bestArm = 0
             for i in range(10):
-                if self.armAppearances[i] > 0:
-                    rewards[i] = self.armJackpots[i] / self.armAppearances[i]
+                if self.armPulls[i] > 0:
+                    rewards[i] = self.armJackpots[i] / self.armPulls[i]
                     if rewards[i] > bestReward:
                         bestArm = i
                         bestReward = rewards[i]
                             
-        print(bestArm)
         return bestArm
         
         return False
