@@ -8,6 +8,9 @@ from epsGreedyAgent import epsGreedyAgent
 from UCBAgent import UCBAgent
 from thompsonAgent import thompsonAgent
 import argparse
+# code I added
+import matplotlib.pyplot as plt
+# ends here
 ######################################################
 AGENTS_MAP = {'randomAgent' : randomAgent,
                'epsGreedyAgent' : epsGreedyAgent,
@@ -48,11 +51,33 @@ testBandit = bandit(args.input)
 agent = AGENTS_MAP[args.agent]()
 history = []
 cumulative_reward = 0
+
+# code I added
+cumulative_regret = [0]
+test0data = [0.5, 0.6, 0.4, 0.3, 0.45, 0.7, 0.65, 0.43, 0.55, 0.45]
+test1data = [0.2, 0.2, 0.2, 0.2, 0.9, 0.2, 0.2, 0.2, 0.2, 0.2]
+# ends here
+
+
 for numRuns in range(args.num_plays):
     testArm = agent.recommendArm(testBandit, history)
     reward = testBandit.pull_arm(testArm)
     cumulative_reward += reward
     history.append((testArm, reward))
+
+    # code I added
+    if args.input == 'input/test0.txt':
+        cumulative_regret.append(cumulative_regret[-1] + 0.7 - test0data[testArm])
+    else:
+        cumulative_regret.append(cumulative_regret[-1] + 0.9 - test1data[testArm])
+    #ends here
+
+# code I added
+range = range(len(cumulative_regret))
+
+plt.plot(range, cumulative_regret)
+plt.show()
+# ends here
 
 print(cumulative_reward)
     
