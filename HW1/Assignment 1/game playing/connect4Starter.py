@@ -1,6 +1,6 @@
 from pettingzoo.classic import connect_four_v3
 import numpy as np
-env = connect_four_v3.env()
+env = connect_four_v3.env(render_mode="human") # modified this line
 env.reset()
 print(env)
 
@@ -43,6 +43,10 @@ def heuristic(obs):
 			if sameToken(board[i][j],[1,0]):
 				currentStreak += 1
 	return longestStreak
+ 
+
+def randomAgent(agent):
+	return env.action_space(agent).sample(mask)
 	
 	
 for agent in env.agent_iter():
@@ -56,7 +60,7 @@ for agent in env.agent_iter():
 
 		# this is where you would insert your policy
 		if(agent == "player_0"):
-			action = env.action_space(agent).sample(mask)
+			action = randomAgent(agent)
 		else:
 			action = env.action_space(agent).sample(mask)
 		
