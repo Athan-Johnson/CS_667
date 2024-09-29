@@ -45,8 +45,48 @@ def heuristic(obs):
 	return longestStreak
  
 
-def randomAgent(agent):
-	return env.action_space(agent).sample(mask)
+def randomAgent(_, agent_):
+	return env.action_space(agent_).sample(mask)
+ 
+ 
+ 
+MAX_STEPS = 10.000
+
+def recursiveMiniMax(env__, step, amMaximizingPlayer, agent__):
+	if step == MAX_STEPS or env__.terminations[agent__] or env__.truncations[agent__]:
+		return heuristic(env__.observe(agent__)), step + 1, None
+
+	if amMaximizingPlayer:
+		maxEval = -np.inf
+		bestAction = None
+		for action_ in env__.action_space(agent__):
+			envCopy = env__.copy()
+			envCopy.step(action_)
+			evaluation, step, _ = recursiveMiniMax(envCopy, step, False, envCopy.agent_selection)
+			if evaluation > maxEval:
+				maxEval = evaluation
+				bestAction = action_
+		return maxEval, bestAction
+
+	else:
+		minEval = np.inf
+		bestAction = None
+		for action_ in env__.action_space(agent__):
+			envCopy = env__.copy()
+			envCopy.step(action_)
+			evaluation, step, _ = recursiveMiniMax(envCopy, step, True, envCopy.agent_selection)
+			if evaluation < minEval:
+				minEval = evaluation
+				bestAction = action_
+		return minEval, bestAction
+
+
+
+def miniMax(env_, agent_):
+	step = 0
+	_, _, ans = recursiveMiniMax(env_, step, True, agent_)
+	return ans
+
 	
 	
 for agent in env.agent_iter():
@@ -59,10 +99,11 @@ for agent in env.agent_iter():
 		mask = observation["action_mask"]
 
 		# this is where you would insert your policy
-		if(agent == "player_0"):
-			action = randomAgent(agent)
+		if agent == "player_0":
+			action = miniMax(env, agent)
 		else:
-			action = env.action_space(agent).sample(mask)
+			action = randomAgent(env, agent)
+
 		
 	env.step(action)
 	print(observation)
