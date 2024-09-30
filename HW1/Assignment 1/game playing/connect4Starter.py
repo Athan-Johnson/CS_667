@@ -50,11 +50,11 @@ def randomAgent(_, agent_):
  
  
  
-MAX_STEPS = 10.000
+MAX_DEPTH = 10.000
 
-def recursiveMiniMax(env__, step, amMaximizingPlayer, agent__):
-	if step == MAX_STEPS or env__.terminations[agent__] or env__.truncations[agent__]:
-		return heuristic(env__.observe(agent__)), step + 1, None
+def recursiveMiniMax(env__, depth, amMaximizingPlayer, agent__):
+	if depth == 0 or env__.terminations[agent__] or env__.truncations[agent__]:
+		return heuristic(env__.observe(agent__)), depth, None
 
 	if amMaximizingPlayer:
 		maxEval = -np.inf
@@ -62,7 +62,7 @@ def recursiveMiniMax(env__, step, amMaximizingPlayer, agent__):
 		for action_ in env__.action_space(agent__):
 			envCopy = env__.copy()
 			envCopy.step(action_)
-			evaluation, step, _ = recursiveMiniMax(envCopy, step, False, envCopy.agent_selection)
+			evaluation, step, _ = recursiveMiniMax(envCopy, depth - 1, False, envCopy.agent_selection)
 			if evaluation > maxEval:
 				maxEval = evaluation
 				bestAction = action_
@@ -74,7 +74,7 @@ def recursiveMiniMax(env__, step, amMaximizingPlayer, agent__):
 		for action_ in env__.action_space(agent__):
 			envCopy = env__.copy()
 			envCopy.step(action_)
-			evaluation, step, _ = recursiveMiniMax(envCopy, step, True, envCopy.agent_selection)
+			evaluation, step, _ = recursiveMiniMax(envCopy, depth - 1, True, envCopy.agent_selection)
 			if evaluation < minEval:
 				minEval = evaluation
 				bestAction = action_
@@ -83,8 +83,8 @@ def recursiveMiniMax(env__, step, amMaximizingPlayer, agent__):
 
 
 def miniMax(env_, agent_):
-	step = 0
-	_, _, ans = recursiveMiniMax(env_, step, True, agent_)
+	depth = 5
+	_, _, ans = recursiveMiniMax(env_, depth, True, agent_)
 	return ans
 
 	
