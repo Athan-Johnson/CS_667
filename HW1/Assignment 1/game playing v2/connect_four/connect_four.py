@@ -137,6 +137,9 @@ class raw_env(AECEnv, EzPickle):
     def setState(self, currentState, currentPlayer):
         self.board = copy.deepcopy(currentState)
         self.agent_selection = currentPlayer
+        self._agent_selector._current_agent = self.agents.index(currentPlayer)
+        #print(self._agent_selector._current_agent)
+        #print(self._agent_selector._current_agent)
         
         board_vals = np.array(self.board).reshape(6, 7)
         cur_player = self.possible_agents.index(currentPlayer)
@@ -224,9 +227,9 @@ class raw_env(AECEnv, EzPickle):
             if self.board[i] == 0:
                 self.board[i] = piece
                 break
-
+        
         next_agent = self._agent_selector.next()
-
+        
         winner = self.check_for_winner()
 
         # check if there is a winner
