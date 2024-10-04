@@ -49,13 +49,13 @@ def heuristic(obs):
     
 
 
-def randomAgent(_, agent_):
+def randomAgent(_, agent_, __):
     return env.action_space(agent_).sample(mask)
 
 
 MAX_DEPTH = 10.000
 
-def recursiveMiniMax(env__, depth, actions, amMaximizingPlayer, agent__):
+def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
     if depth == 0 or env__.check_for_winner():
         return heuristic(env__.observe(agent__)), -1
 
@@ -66,16 +66,17 @@ def recursiveMiniMax(env__, depth, actions, amMaximizingPlayer, agent__):
         envCopy = connect_four_v3.env()
         envCopy.reset()
 
+        print(envCopy.observe(agent__))
         for action_ in range(6):
-            for a in actions:
+            for a in actions_:
                 envCopy.step(a)
             envCopy.step(action_)
-            actions.append(action_)
-            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions, False, envCopy.agent_selection)
+            actions_.append(action_)
+            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, False, envCopy.agent_selection)
             if evaluation > maxEval:
                 maxEval = evaluation
                 bestAction = action_
-            actions.pop()
+            actions_.pop()
             envCopy.reset()
         return maxEval, bestAction
 
@@ -87,33 +88,33 @@ def recursiveMiniMax(env__, depth, actions, amMaximizingPlayer, agent__):
         envCopy.reset()
 
         for action_ in range(6):
-            for a in actions:
+            for a in actions_:
                 envCopy.step(a)
             envCopy.step(action_)
-            actions.append(action_)
-            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions, True, envCopy.agent_selection)
+            actions_.append(action_)
+            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, True, envCopy.agent_selection)
             if evaluation < minEval:
                 minEval = evaluation
                 bestAction = action_
-            actions.pop()
+            actions_.pop()
             envCopy.reset()
         return minEval, bestAction
 
 
 
-def miniMax(env_, agent_):
-    depth = 2
-    actions = []
-    _, ans = recursiveMiniMax(env_, depth, actions, True, agent_)
+def miniMax(env_, agent_, actions_):
+    depth = 5
+    _, ans = recursiveMiniMax(env_, depth, actions_, True, agent_)
+    actions.append(ans)
     return ans
 
-turnCount = 0
-fifthState = ""
-fifthPlayer = ""
+# turnCount = 0
+# fifthState = ""
+# fifthPlayer = ""
 for agent in env.agent_iter():
-    if turnCount == 5:
-        fifthState = copy.deepcopy(env.board)
-        fifthPlayer = env.agent_selection
+    # if turnCount == 5:
+    #     fifthState = copy.deepcopy(env.board)
+    #     fifthPlayer = env.agent_selection
     print(agent)
     print(env.agent_selection)
     observation, reward, termination, truncation, info = env.last()
@@ -124,15 +125,16 @@ for agent in env.agent_iter():
         mask = observation["action_mask"]
 
         # this is where you would insert your policy
-        if(agent == "player_0"):
-            action = randomAgent(env, agent)
+        actions = []
+        if agent == "player_0":
+            action = randomAgent(env, agent, actions)
         else:
-            action = miniMax(env, agent)
+            action = miniMax(env, agent, actions)
 
     env.step(action)
     print(observation)
     print(heuristic(observation))
-    turnCount += 1
+    # turnCount += 1
 # print("RESET")
 # observation = env.setState(fifthState,fifthPlayer)
 # print(observation)
