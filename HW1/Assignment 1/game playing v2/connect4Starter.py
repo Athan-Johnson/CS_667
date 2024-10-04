@@ -2,7 +2,7 @@
 import connect_four_v3
 import numpy as np
 import copy
-env = connect_four_v3.env()
+env = connect_four_v3.env(render_mode="human")
 env.reset()
 
 print(env)
@@ -47,6 +47,66 @@ def heuristic(obs):
                 currentStreak += 1
     return longestStreak
     
+
+
+def randomAgent(_, agent_):
+    return env.action_space(agent_).sample(mask)
+
+
+MAX_DEPTH = 10.000
+
+def recursiveMiniMax(env__, depth, actions, amMaximizingPlayer, agent__):
+    if depth == 0 or env__.check_for_winner():
+        return heuristic(env__.observe(agent__)), -1
+
+    if amMaximizingPlayer:
+        maxEval = -np.inf
+        bestAction = -1
+
+        envCopy = connect_four_v3.env()
+        envCopy.reset()
+
+        for action_ in range(6):
+            for a in actions:
+                envCopy.step(a)
+            envCopy.step(action_)
+            actions.append(action_)
+            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions, False, envCopy.agent_selection)
+            if evaluation > maxEval:
+                maxEval = evaluation
+                bestAction = action_
+            actions.pop()
+            envCopy.reset()
+        return maxEval, bestAction
+
+    else:
+        minEval = np.inf
+        bestAction = -1
+
+        envCopy = connect_four_v3.env()
+        envCopy.reset()
+
+        for action_ in range(6):
+            for a in actions:
+                envCopy.step(a)
+            envCopy.step(action_)
+            actions.append(action_)
+            evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions, True, envCopy.agent_selection)
+            if evaluation < minEval:
+                minEval = evaluation
+                bestAction = action_
+            actions.pop()
+            envCopy.reset()
+        return minEval, bestAction
+
+
+
+def miniMax(env_, agent_):
+    depth = 2
+    actions = []
+    _, ans = recursiveMiniMax(env_, depth, actions, True, agent_)
+    return ans
+
 turnCount = 0
 fifthState = ""
 fifthPlayer = ""
@@ -65,39 +125,39 @@ for agent in env.agent_iter():
 
         # this is where you would insert your policy
         if(agent == "player_0"):
-            action = env.action_space(agent).sample(mask)
+            action = randomAgent(env, agent)
         else:
-            action = env.action_space(agent).sample(mask)
-        
-    env.step(action)
-    print(observation)
-    print(heuristic(observation))
-    turnCount += 1
-print("RESET")
-observation = env.setState(fifthState,fifthPlayer)    
-print(observation)
-termination = False
-truncation = False
-print("CONTINUATION")
-while termination is False and truncation is False:
-    agent = env.agent_selection
-    #print(env.agent_selection)
-    observation, reward, termination, truncation, info = env.last()
-    print(termination,truncation)
-    if termination or truncation:
-        action = None
-        break
-    else:
-        mask = observation["action_mask"]
+            action = miniMax(env, agent)
 
-        # this is where you would insert your policy
-        if(agent == "player_0"):
-            action = env.action_space(agent).sample(mask)
-        else:
-            action = env.action_space(agent).sample(mask)
-        
     env.step(action)
     print(observation)
     print(heuristic(observation))
     turnCount += 1
-env.close()
+# print("RESET")
+# observation = env.setState(fifthState,fifthPlayer)
+# print(observation)
+# termination = False
+# truncation = False
+# print("CONTINUATION")
+# while termination is False and truncation is False:
+#     agent = env.agent_selection
+#     #print(env.agent_selection)
+#     observation, reward, termination, truncation, info = env.last()
+#     print(termination,truncation)
+#     if termination or truncation:
+#         action = None
+#         break
+#     else:
+#         mask = observation["action_mask"]
+#
+#         # this is where you would insert your policy
+#         if(agent == "player_0"):
+#             action = env.action_space(agent).sample(mask)
+#         else:
+#             action = env.action_space(agent).sample(mask)
+#
+#     env.step(action)
+#     print(observation)
+#     print(heuristic(observation))
+#     turnCount += 1
+# env.close()
