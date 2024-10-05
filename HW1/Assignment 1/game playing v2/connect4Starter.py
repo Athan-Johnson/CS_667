@@ -81,7 +81,7 @@ def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
                 envCopy.reset()
                 for a in actions_:
                     envCopy.step(a)
-                env__.step(action_)
+                envCopy.step(action_)
                 actions_.append(action_)
                 evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, False, envCopy.agent_selection)
                 if evaluation > maxEval:
@@ -101,7 +101,7 @@ def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
                 envCopy.reset()
                 for a in actions_:
                     envCopy.step(a)
-                env__.step(action_)
+                envCopy.step(action_)
                 actions_.append(action_)
                 evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, True, envCopy.agent_selection)
                 if evaluation < minEval:
