@@ -50,17 +50,19 @@ def heuristic(obs):
 
 
 def randomAgent(_, mask_, agent_, __):
-    return env.action_space(agent_).sample(mask_)
+    # return env.action_space(agent_).sample(mask_)
+    return 5
 
 
 def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
     # figure out if the game is terminated or truncated and set the mask
     observation_, reward_, termination_, truncation_, info_ = env__.last()
     if termination_ or truncation_:
+        print("---------------------------")
         if (amMaximizingPlayer and reward_ == 1) or (not amMaximizingPlayer and reward_ == 0):
-            return np.inf, -1
+            return np.inf, None
         elif (amMaximizingPlayer and reward_ == 0) or (not amMaximizingPlayer and reward_ == 1):
-            return -np.inf, -1
+            return -np.inf, None
         else:
             return 0, -1
     else:
@@ -74,10 +76,9 @@ def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
         maxEval = -np.inf
         bestAction = -1
 
-        envCopy = connect_four_v3.env()
-
         for action_ in range(len(mask_)):
             if mask_[action_] == 1:
+                envCopy = copy.deepcopy(env__)
                 envCopy.reset()
                 for a in actions_:
                     envCopy.step(a)
@@ -94,10 +95,9 @@ def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
         minEval = np.inf
         bestAction = -1
 
-        envCopy = connect_four_v3.env()
-
         for action_ in range(len(mask_)):
             if mask_[action_] == 1:
+                envCopy = copy.deepcopy(env__)
                 envCopy.reset()
                 for a in actions_:
                     envCopy.step(a)
@@ -113,7 +113,7 @@ def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
 
 
 def miniMax(env_, _, agent_, actions_):
-    depth = 2
+    depth = 4
     envCopy = connect_four_v3.env()
     envCopy.reset()
     for a in actions_:
