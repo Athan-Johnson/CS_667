@@ -2,10 +2,11 @@
 import connect_four_v3
 import numpy as np
 import copy
-env = connect_four_v3.env(render_mode="human")
-env.reset()
+import random
+Env = connect_four_v3.env(render_mode="human")
+Env.reset()
 
-print(env)
+print(Env)
 
 def sameToken(pos1,pos2):
     if pos1[0] == pos2[0] and pos1[1] == pos2[1]:
@@ -49,92 +50,194 @@ def heuristic(obs):
     
 
 
-def randomAgent(_, mask_, agent_, __):
-    # return env.action_space(agent_).sample(mask_)
-    return 5
+def randomAgent(env_, mask_, agent_, __):
+    return env_.action_space(agent_).sample(mask_)
 
 
-def recursiveMiniMax(env__, depth, actions_, amMaximizingPlayer, agent__):
-    # figure out if the game is terminated or truncated and set the mask
-    observation_, reward_, termination_, truncation_, info_ = env__.last()
-    if termination_ or truncation_:
-        print("---------------------------")
-        if (amMaximizingPlayer and reward_ == 1) or (not amMaximizingPlayer and reward_ == 0):
-            return np.inf, None
-        elif (amMaximizingPlayer and reward_ == 0) or (not amMaximizingPlayer and reward_ == 1):
-            return -np.inf, None
-        else:
-            return 0, -1
+def is_terminal_state(env_):
+    # Check if the game has ended due to a win or a draw
+    return env_.terminations[env_.agent_selection] or env_.truncations[env_.agent_selection]
+
+def evaluate_board(env_):
+    # Heuristic evaluation of the board, you can improve this
+    if env_.rewards[env_.agent_selection] == 1:
+        return 100  # Winning state
+    elif env_.rewards[env_.agent_selection] == -1:
+        return -100  # Losing state
     else:
-        mask_ = observation_["action_mask"]
+        return heuristic(env_.observe(env_.agent_selection))  # Neutral state
 
-    # figure out if we're out of depth
-    if depth == 0:
-        return heuristic(env__.observe(agent__)), -1
-
-    if amMaximizingPlayer:
-        maxEval = -np.inf
-        bestAction = -1
-
-        for action_ in range(len(mask_)):
-            if mask_[action_] == 1:
-                envCopy = copy.deepcopy(env__)
-                envCopy.reset()
-                for a in actions_:
-                    envCopy.step(a)
-                envCopy.step(action_)
-                actions_.append(action_)
-                evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, False, envCopy.agent_selection)
-                if evaluation > maxEval:
-                    maxEval = evaluation
-                    bestAction = action_
-                actions_.pop()
-        return maxEval, bestAction
-
-    else:
-        minEval = np.inf
-        bestAction = -1
-
-        for action_ in range(len(mask_)):
-            if mask_[action_] == 1:
-                envCopy = copy.deepcopy(env__)
-                envCopy.reset()
-                for a in actions_:
-                    envCopy.step(a)
-                envCopy.step(action_)
-                actions_.append(action_)
-                evaluation, _ = recursiveMiniMax(envCopy, depth - 1, actions_, True, envCopy.agent_selection)
-                if evaluation < minEval:
-                    minEval = evaluation
-                    bestAction = action_
-                actions_.pop()
-        return minEval, bestAction
+def replay_env(env_, move_history):
+    """Reset and replay the environment up to the current point based on move history."""
+    env_.reset()
+    for move in move_history:
+        env_.step(move)
 
 
+def recursiveMiniMax(env_, depth, is_maximizing, move_history):
+    if depth == 0 or is_terminal_state(env_):
+        return evaluate_board(env_), None
 
-def miniMax(env_, _, agent_, actions_):
+    observation_, reward_, termination_, truncation_, info_ = env_.last()
+    valid_moves = observation_["action_mask"]
+
+    if is_maximizing:
+        max_eval = -np.inf
+        best_move = None
+        for move in range(len(valid_moves)):
+            if valid_moves[move]:
+                # Create a new move history including this move
+                new_move_history = move_history + [move]
+
+                # Reset the environment and replay up to the current state
+                replay_env(env_, new_move_history)
+
+                eval_score, _ = recursiveMiniMax(env_, depth - 1, False, new_move_history)
+                if eval_score > max_eval:
+                    max_eval = eval_score
+                    best_move = move
+        return max_eval, best_move
+
+    else:  # Minimizing player
+        min_eval = np.inf
+        best_move = None
+        for move in range(len(valid_moves)):
+            if valid_moves[move]:
+                # Create a new move history including this move
+                new_move_history = move_history + [move]
+
+                # Reset the environment and replay up to the current state
+                replay_env(env_, new_move_history)
+
+                eval_score, _ = recursiveMiniMax(env_, depth - 1, True, new_move_history)
+                if eval_score < min_eval:
+                    min_eval = eval_score
+                    best_move = move
+        return min_eval, best_move
+
+
+
+def miniMax(_, __, ___, actions_):
     depth = 4
     envCopy = connect_four_v3.env()
     envCopy.reset()
     for a in actions_:
         envCopy.step(a)
-    _, ans = recursiveMiniMax(envCopy, depth, actions_, True, agent_)
-    actions_p1.append(ans)
-    actions_p2.append(ans)
+    _, ans = recursiveMiniMax(envCopy, depth, True, actions_)
     return ans
+
+
+class Node:
+    def __init__(self, state, parent=None):
+        self.state = state
+        self.parent = parent
+        self.children = []
+        self.wins = 0
+        self.visits = 0
+        observation_, reward_, termination_, truncation_, info_ = state.last()
+        self.untried_actions = observation_["action_mask"]
+        self.untried_actions = self.untried_actions.tolist()
+
+    def is_fully_expanded(self):
+        return len(self.untried_actions) == 0
+
+    def best_child(self, exploration_weight=1.4):
+        choices_weights = [
+            (child.wins / child.visits) + exploration_weight * np.sqrt(np.log(self.visits) / child.visits)
+            for child in self.children
+        ]
+        return self.children[np.argmax(choices_weights)]
+
+    def best_move(self):
+        # Return the child with the highest win rate (no exploration factor)
+        choices_weights = [(child.wins / child.visits) for child in self.children]
+        return np.argmax(choices_weights)
+
+    def expand(self, action_history):
+        action_ = self.untried_actions.pop()
+        next_state = connect_four_v3.env()
+        next_state.reset()
+        for a in action_history:
+            next_state.step(a)
+        next_state.step(action_)
+        child_node = Node(next_state, parent=self)
+        self.children.append(child_node)
+        return child_node
+
+    def update(self, result):
+        self.visits += 1
+        self.wins += result
+
+    def is_terminal_node(self):
+        return is_terminal_state(self.state)
+
+
+def uct_search(root_state, actions):
+    max_iter = 1000
+    root_node = Node(root_state)
+
+    for _ in range(max_iter):
+        node = root_node
+        state = connect_four_v3.env()
+        state.reset()
+        for a in actions:
+            state.step(a)
+
+        # Selection
+        while not node.is_terminal_node() and node.is_fully_expanded():
+            node = node.best_child()
+
+        # Expansion
+        if not node.is_fully_expanded():
+            node = node.expand(actions)
+
+        # Simulation
+        final_reward = 0
+        while not is_terminal_state(state):
+            observation_, reward_, termination_, truncation_, info_ = state.last()
+
+            # Get valid actions from the action mask
+            print(np.nonzero(observation_["action_mask"])[0])
+            valid_actions = np.nonzero(observation_["action_mask"])[0]
+
+            # Randomly select a valid action (you could also use a more strategic choice here)
+            action_ = random.choice(valid_actions)
+
+            state.step(action_)# Accumulate reward (you may want to handle multi-agent rewards differently)
+
+            final_reward += reward_
+
+            # Check if the game is over
+            if termination_ or truncation_:
+                break
+
+        # Backpropagation
+        while node is not None:
+            node.update(final_reward)  # Update node with the cumulative reward
+            node = node.parent
+
+    return root_node.best_move()
+
+
+def monteCarlo(_, __, ___, actions):
+    envCopy = connect_four_v3.env()
+    envCopy.reset()
+    for a in actions:
+        envCopy.step(a)
+    return uct_search(envCopy, actions)
+
 
 # turnCount = 0
 # fifthState = ""
 # fifthPlayer = ""
-actions_p1 = []
-actions_p2 = []
-for agent in env.agent_iter():
+actions_history = []
+for agent in Env.agent_iter():
     # if turnCount == 5:
-    #     fifthState = copy.deepcopy(env.board)
-    #     fifthPlayer = env.agent_selection
+    #     fifthState = copy.deepcopy(Env.board)
+    #     fifthPlayer = Env.agent_selection
     print(agent)
-    print(env.agent_selection)
-    observation, reward, termination, truncation, info = env.last()
+    print(Env.agent_selection)
+    observation, reward, termination, truncation, info = Env.last()
     if termination or truncation:
         action = None
         break
@@ -143,24 +246,25 @@ for agent in env.agent_iter():
 
         # this is where you would insert your policy
         if agent == "player_0":
-            action = randomAgent(env, mask, agent, actions_p1)
+            action = miniMax(Env, mask, agent, actions_history)
         else:
-            action = miniMax(env, mask, agent, actions_p2)
+            action = monteCarlo(Env, mask, agent, actions_history)
 
-    env.step(action)
+    Env.step(action)
+    actions_history = actions_history + [action]
     print(observation)
     print(heuristic(observation))
     # turnCount += 1
 # print("RESET")
-# observation = env.setState(fifthState,fifthPlayer)
+# observation = Env.setState(fifthState,fifthPlayer)
 # print(observation)
 # termination = False
 # truncation = False
 # print("CONTINUATION")
 # while termination is False and truncation is False:
-#     agent = env.agent_selection
-#     #print(env.agent_selection)
-#     observation, reward, termination, truncation, info = env.last()
+#     agent = Env.agent_selection
+#     #print(Env.agent_selection)
+#     observation, reward, termination, truncation, info = Env.last()
 #     print(termination,truncation)
 #     if termination or truncation:
 #         action = None
@@ -170,12 +274,12 @@ for agent in env.agent_iter():
 #
 #         # this is where you would insert your policy
 #         if(agent == "player_0"):
-#             action = env.action_space(agent).sample(mask)
+#             action = Env.action_space(agent).sample(mask)
 #         else:
-#             action = env.action_space(agent).sample(mask)
+#             action = Env.action_space(agent).sample(mask)
 #
-#     env.step(action)
+#     Env.step(action)
 #     print(observation)
 #     print(heuristic(observation))
 #     turnCount += 1
-# env.close()
+# Env.close()
