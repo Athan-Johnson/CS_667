@@ -74,7 +74,7 @@ def replay_env(env_, move_history):
         env_.step(move)
 
 
-def recursiveMiniMax(env_, depth, is_maximizing, move_history):
+def recursiveMiniMax(env_, depth, is_maximizing, move_history, alpha=-np.inf, beta=np.inf):
     if depth == 0 or is_terminal_state(env_):
         return evaluate_board(env_), None
 
@@ -92,10 +92,16 @@ def recursiveMiniMax(env_, depth, is_maximizing, move_history):
                 # Reset the environment and replay up to the current state
                 replay_env(env_, new_move_history)
 
-                eval_score, _ = recursiveMiniMax(env_, depth - 1, False, new_move_history)
+                eval_score, _ = recursiveMiniMax(env_, depth - 1, False, new_move_history, alpha, beta)
                 if eval_score > max_eval:
                     max_eval = eval_score
                     best_move = move
+
+                # Update alpha and prune if necessary
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
+                    break # beta cutoff, prune this branch
+
         return max_eval, best_move
 
     else:  # Minimizing player
@@ -109,16 +115,23 @@ def recursiveMiniMax(env_, depth, is_maximizing, move_history):
                 # Reset the environment and replay up to the current state
                 replay_env(env_, new_move_history)
 
-                eval_score, _ = recursiveMiniMax(env_, depth - 1, True, new_move_history)
+                eval_score, _ = recursiveMiniMax(env_, depth - 1, True, new_move_history, alpha, beta)
+
                 if eval_score < min_eval:
                     min_eval = eval_score
                     best_move = move
+
+                # Update beta and prune if necessary
+                beta = min(beta, eval_score)
+                if beta <= alpha:
+                    break # alpha cutoff, prune this branch
+
         return min_eval, best_move
 
 
 
 def miniMax(_, __, ___, actions_):
-    depth = 4
+    depth = 5
     envCopy = connect_four_v3.env()
     envCopy.reset()
     for a in actions_:
@@ -174,7 +187,7 @@ class Node:
 
 
 def uct_search(root_state, actions):
-    max_iter = 3000
+    max_iter = 30000
     root_node = Node(root_state)
 
     for _ in range(max_iter):
