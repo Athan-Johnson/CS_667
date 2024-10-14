@@ -131,11 +131,11 @@ class Node:
     def __init__(self, state, parent=None):
         self.state = state
         self.parent = parent
-        self.children = []
+        self.children = [None] * 7
         self.wins = 0
         self.visits = 0
         observation_, reward_, termination_, truncation_, info_ = state.last()
-        self.untried_actions = observation_["action_mask"]
+        self.untried_actions = np.nonzero(observation_["action_mask"])[0]
         self.untried_actions = self.untried_actions.tolist()
 
     def is_fully_expanded(self):
@@ -144,13 +144,14 @@ class Node:
     def best_child(self, exploration_weight=1.4):
         choices_weights = [
             (child.wins / child.visits) + exploration_weight * np.sqrt(np.log(self.visits) / child.visits)
+            if child is not None else -1
             for child in self.children
         ]
         return self.children[np.argmax(choices_weights)]
 
     def best_move(self):
         # Return the child with the highest win rate (no exploration factor)
-        choices_weights = [(child.wins / child.visits) for child in self.children]
+        choices_weights = [(child.wins / child.visits) if child is not None else -1 for child in self.children]
         return np.argmax(choices_weights)
 
     def expand(self, action_history):
@@ -161,7 +162,7 @@ class Node:
             next_state.step(a)
         next_state.step(action_)
         child_node = Node(next_state, parent=self)
-        self.children.append(child_node)
+        self.children[action_] = child_node
         return child_node
 
     def update(self, result):
@@ -173,7 +174,7 @@ class Node:
 
 
 def uct_search(root_state, actions):
-    max_iter = 1000
+    max_iter = 3000
     root_node = Node(root_state)
 
     for _ in range(max_iter):
@@ -197,7 +198,6 @@ def uct_search(root_state, actions):
             observation_, reward_, termination_, truncation_, info_ = state.last()
 
             # Get valid actions from the action mask
-            print(np.nonzero(observation_["action_mask"])[0])
             valid_actions = np.nonzero(observation_["action_mask"])[0]
 
             # Randomly select a valid action (you could also use a more strategic choice here)
@@ -205,10 +205,11 @@ def uct_search(root_state, actions):
 
             state.step(action_)# Accumulate reward (you may want to handle multi-agent rewards differently)
 
-            final_reward += reward_
+            observation_, reward_, termination_, truncation_, info_ = state.last()
 
             # Check if the game is over
             if termination_ or truncation_:
+                final_reward = reward_
                 break
 
         # Backpropagation
