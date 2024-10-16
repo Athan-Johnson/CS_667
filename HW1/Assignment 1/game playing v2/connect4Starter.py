@@ -131,7 +131,7 @@ def recursiveMiniMax(env_, depth, is_maximizing, move_history, alpha=-np.inf, be
 
 
 def miniMax(_, __, ___, actions_):
-    depth = 5
+    depth = 4
     envCopy = connect_four_v3.env()
     envCopy.reset()
     for a in actions_:
@@ -187,7 +187,7 @@ class Node:
 
 
 def uct_search(root_state, actions):
-    max_iter = 30000
+    max_iter = 10000
     root_node = Node(root_state)
 
     for _ in range(max_iter):
@@ -216,7 +216,7 @@ def uct_search(root_state, actions):
             # Randomly select a valid action (you could also use a more strategic choice here)
             action_ = random.choice(valid_actions)
 
-            state.step(action_)# Accumulate reward (you may want to handle multi-agent rewards differently)
+            state.step(action_) # Accumulate reward (you may want to handle multi-agent rewards differently)
 
             observation_, reward_, termination_, truncation_, info_ = state.last()
 
@@ -249,8 +249,6 @@ for agent in Env.agent_iter():
     # if turnCount == 5:
     #     fifthState = copy.deepcopy(Env.board)
     #     fifthPlayer = Env.agent_selection
-    print(agent)
-    print(Env.agent_selection)
     observation, reward, termination, truncation, info = Env.last()
     if termination or truncation:
         action = None
@@ -260,14 +258,23 @@ for agent in Env.agent_iter():
 
         # this is where you would insert your policy
         if agent == "player_0":
-            action = miniMax(Env, mask, agent, actions_history)
+            action = randomAgent(Env, mask, agent, actions_history)
         else:
             action = monteCarlo(Env, mask, agent, actions_history)
 
     Env.step(action)
     actions_history = actions_history + [action]
     print(observation)
-    print(heuristic(observation))
+
+    player_1_reward = Env.rewards['player_0']  # Player 1 (agent 'player_0')
+    player_2_reward = Env.rewards['player_1']  # Player 2 (agent 'player_1')
+
+    if player_1_reward > player_2_reward:
+        print("Player 0 wins!")
+    elif player_2_reward > player_1_reward:
+        print("Player 1 wins!")
+    else:
+        print("It's a draw!")
     # turnCount += 1
 # print("RESET")
 # observation = Env.setState(fifthState,fifthPlayer)
