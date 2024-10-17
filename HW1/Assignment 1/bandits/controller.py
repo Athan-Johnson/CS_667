@@ -90,7 +90,7 @@ else:
         history = []
         cumulative_reward = 0
         cumulative_regret = [0]
-        
+
         for numRuns in range(args.num_plays):
             testArm = agent.recommendArm(testBandit, history)
             reward = testBandit.pull_arm(testArm)
@@ -106,6 +106,7 @@ else:
 
         # code I added
         regretRange = range(len(cumulative_regret))
+        print(cumulative_regret[-1])
 
         plt.plot(regretRange, cumulative_regret, label=a)
         print(a)

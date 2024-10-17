@@ -258,7 +258,7 @@ for agent in Env.agent_iter():
 
         # this is where you would insert your policy
         if agent == "player_0":
-            action = randomAgent(Env, mask, agent, actions_history)
+            action = miniMax(Env, mask, agent, actions_history)
         else:
             action = monteCarlo(Env, mask, agent, actions_history)
 
