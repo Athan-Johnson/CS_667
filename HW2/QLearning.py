@@ -1,9 +1,17 @@
 import gymnasium as gym
 import random
 import tqdm
+import argparse
 
 
-import random
+# Parsing
+parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
+parser.add_argument('--iterations', default=500000, help='The number of iterations to train for, default is 500,000')
+args = parser.parse_args()
+
+
+
+
 
 def max_with_random_tiebreaker(lst):
     if not lst:
@@ -41,7 +49,7 @@ for j in range(16):  # Assuming a 4x4 Frozen Lake (16 states)
         policy[j, k] = 0
 
 # this is the for loop we're going to be running the training in
-for i in tqdm.tqdm(range(500000)):
+for i in tqdm.tqdm(range(int(args.iterations))):
 	# Reset the environment to start a new episode
 	# the format here for our dict "policy" is obs, or the number assigned
 	# to the state we're in, and the move from that state
