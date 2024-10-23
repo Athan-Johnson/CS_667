@@ -6,7 +6,7 @@ import argparse
 
 # Parsing
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
-parser.add_argument('--iterations', default=500000, help='The number of iterations to train for, default is 500,000')
+parser.add_argument('--iterations', default=50000, help='The number of iterations to train for, default is 500,000')
 args = parser.parse_args()
 
 
