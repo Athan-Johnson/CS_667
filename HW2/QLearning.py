@@ -6,8 +6,8 @@ import argparse
 
 # Parsing
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
-parser.add_argument('--iterations', default=50000, help='The number of iterations to train for, default is 500,000')
-parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch')
+parser.add_argument('--iterations', default=1000000, help='The number of iterations to train for, default is 500,000')
+parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch, options are True or False')
 args = parser.parse_args()
 
 
@@ -43,6 +43,7 @@ policy = {}
 learningRate = 0.1
 discountFactor = 0.9
 epsilon = 1.0
+epsilonDecay = 0.9995
 
 # Initialize policy table with zeros
 for j in range(16):  # Assuming a 4x4 Frozen Lake (16 states)
@@ -72,7 +73,7 @@ for i in tqdm.tqdm(range(int(args.iterations))):
 
 		policy[prevObs, action] += learningRate * (reward + discountFactor * max(policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]) - policy[prevObs, action])
 
-		epsilon = epsilon * 0.995
+		epsilon = epsilon * epsilonDecay
 		prevObs = obs
 
 # Close the environment when finished
