@@ -7,6 +7,7 @@ import argparse
 # Parsing
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
 parser.add_argument('--iterations', default=50000, help='The number of iterations to train for, default is 500,000')
+parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch')
 args = parser.parse_args()
 
 
@@ -71,7 +72,7 @@ for i in tqdm.tqdm(range(int(args.iterations))):
 
 		policy[prevObs, action] += learningRate * (reward + discountFactor * max(policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]) - policy[prevObs, action])
 
-		epsilon = epsilon * 0.9995
+		epsilon = epsilon * 0.995
 		prevObs = obs
 
 # Close the environment when finished
@@ -109,26 +110,27 @@ env.close()
 # Run a final iteration of our trained algorithm with render_mode on so
 # we can see how well it performs
 
-# Create the 4x4 Frozen Lake environment
-env = gym.make("FrozenLake-v1", render_mode="human", map_name="4x4", is_slippery=True)
+if args.show_final_policy:
+	# Create the 4x4 Frozen Lake environment
+	env = gym.make("FrozenLake-v1", render_mode="human", map_name="4x4", is_slippery=True)
 
-for i in range(5):
-	# Reset the environment to start a new episode
-	obs, info = env.reset()
+	for i in range(5):
+		# Reset the environment to start a new episode
+		obs, info = env.reset()
 
-	done = False
-	while not done:
-		# Render the current state of the environment
-		env.render()
+		done = False
+		while not done:
+			# Render the current state of the environment
+			env.render()
 
-		# Implement the policy
-		action = max_with_random_tiebreaker((policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]))
+			# Implement the policy
+			action = max_with_random_tiebreaker((policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]))
 
-		# Step the environment with the chosen action
-		obs, reward, done, truncated, info = env.step(action)
+			# Step the environment with the chosen action
+			obs, reward, done, truncated, info = env.step(action)
 
-		# Print information about the current step
-		# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+			# Print information about the current step
+			# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
 
-# Close the environment when finished
-env.close()
+	# Close the environment when finished
+	env.close()
