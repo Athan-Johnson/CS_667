@@ -7,8 +7,8 @@ import numpy as np
 
 # Parsing
 parser = argparse.ArgumentParser(description='Run SARSA on the icy lake.')
-parser.add_argument('--iterations', default=1000000, help='The number of iterations to train for, default is 1,000,000')
-parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
+parser.add_argument('--iterations', type=int, default=10000, help='The number of iterations to train for, default is 10,000')
+parser.add_argument('--show_final_policy', type=bool, default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
 args = parser.parse_args()
 
 
@@ -29,7 +29,7 @@ num_states = env.observation_space.n
 Q = np.zeros((num_states, num_actions))
 
 # this is the for loop we're going to be running the training in
-for i in tqdm.tqdm(range(int(args.iterations))):
+for i in tqdm.tqdm(range(args.iterations)):
 	# Reset the environment to start a new episode
 	state, info = env.reset()
 
@@ -54,11 +54,11 @@ for i in tqdm.tqdm(range(int(args.iterations))):
 		state = next_state
 		action = next_action
 
-		# Decay epsilon to reduce exploration over time
-		epsilon = max(min_epsilon, epsilon * epsilon_decay)
-
 		# Print information about the current step
-		# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+		# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
+	
+	# Decay epsilon to reduce exploration over time
+	epsilon = max(min_epsilon, epsilon * epsilon_decay)
 
 
 # Close the environment when finished
@@ -73,18 +73,18 @@ wins = 0
 games = 10000
 for i in tqdm.tqdm(range(games)):
 	# Reset the environment to start a new episode
-	obs, info = env.reset()
+	state, info = env.reset()
 
 	done = False
 	while not done:
 		# Implenent the policy
-		action = np.argmax(Q[next_state, :])
+		action = np.argmax(Q[state, :])
 
 		# Step the environment with the chosen action
-		obs, reward, done, truncated, info = env.step(action)
+		state, reward, done, truncated, info = env.step(action)
 
 		# Print information about the current step
-		# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+		# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
 		if reward == 1:
 			wins += 1
 
@@ -102,7 +102,7 @@ if args.show_final_policy:
 
 	for i in range(5):
 		# Reset the environment to start a new episode
-		obs, info = env.reset()
+		state, info = env.reset()
 
 		done = False
 		while not done:
@@ -110,13 +110,13 @@ if args.show_final_policy:
 			env.render()
 
 			# Implement the policy
-			action = np.argmax(Q[next_state, :])
+			action = np.argmax(Q[state, :])
 
 			# Step the environment with the chosen action
-			obs, reward, done, truncated, info = env.step(action)
+			state, reward, done, truncated, info = env.step(action)
 
 			# Print information about the current step
-			# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+			# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
 
 	# Close the environment when finished
 	env.close()
