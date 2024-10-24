@@ -6,7 +6,7 @@ import argparse
 
 # Parsing
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
-parser.add_argument('--iterations', default=1000000, help='The number of iterations to train for, default is 500,000')
+parser.add_argument('--iterations', default=1000000, help='The number of iterations to train for, default is 1,000,000')
 parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch, options are True or False')
 args = parser.parse_args()
 
