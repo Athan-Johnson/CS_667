@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 
 # Parsing
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
-parser.add_argument('--iterations', default=100000, help='The number of iterations to train for, default is 100,000')
-parser.add_argument('--show_final_policy', default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
+parser.add_argument('--iterations', type=int, default=100000, help='The number of iterations to train for, default is 100,000')
+parser.add_argument('--show_final_policy', type=bool, default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
 args = parser.parse_args()
 
 
@@ -98,7 +98,7 @@ plt.plot(range(args.iterations),
 plt.grid()
 plt.legend()
 plt.xlabel('Epoch')
-plt.ylabel('reward')
+plt.ylabel('Reward')
 plt.savefig('0.png')
 plt.show()
 
