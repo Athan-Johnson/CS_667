@@ -3,6 +3,7 @@ import random
 import tqdm
 import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # Parsing
@@ -48,12 +49,12 @@ epsilonDecay = 1 - (50 / args.iterations)
 min_epsilon = 0.1
 rewards = []
 epoch = args.iterations / 10
+num_actions = env.action_space.n
+num_states = env.observation_space.n
 
 
-# Initialize policy table with zeros
-for j in range(16):  # Assuming a 4x4 Frozen Lake (16 states)
-    for k in range(4):  # 4 possible actions (up, down, left, right)
-        policy[j, k] = 0
+# Initialize Q-table with zeros
+policy = np.zeros((num_states, num_actions))
 
 # this is the for loop we're going to be running the training in
 for episode in tqdm.tqdm(range(args.iterations)):
