@@ -10,6 +10,8 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Run Q-Learning on the icy lake.')
 parser.add_argument('--iterations', type=int, default=100000, help='The number of iterations to train for, default is 100,000')
 parser.add_argument('--show_final_policy', type=bool, default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
+parser.add_argument('--is_slippery', type=bool, default=True, help='decide if the agent has a random chance to slip or not')
+parser.add_argument('--map_size', type=str, default='4x4', help='Choices are either 4x4 or 8x8')
 args = parser.parse_args()
 
 
@@ -35,7 +37,7 @@ def max_with_random_tiebreaker(lst):
 
 
 # Create the 4x4 Frozen Lake environment
-env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+env = gym.make("FrozenLake-v1", map_name=args.map_size, is_slippery=args.is_slippery)
 
 
 # Set up Q-learning policy table
@@ -120,7 +122,7 @@ plt.show()
 
 # run 100 times to get the win rate of the algorithm over 100 games
 # Create the 4x4 Frozen Lake environment
-env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+env = gym.make("FrozenLake-v1", map_name=args.map_size, is_slippery=args.is_slippery)
 
 wins = 0
 games = 10000
@@ -151,7 +153,7 @@ env.close()
 
 if args.show_final_policy:
 	# Create the 4x4 Frozen Lake environment
-	env = gym.make("FrozenLake-v1", render_mode="human", map_name="4x4", is_slippery=True)
+	env = gym.make("FrozenLake-v1", render_mode="human", map_name=args.map_size, is_slippery=args.is_slippery)
 
 	for episode in range(5):
 		# Reset the environment to start a new episode

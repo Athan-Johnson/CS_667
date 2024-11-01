@@ -10,12 +10,14 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description='Run SARSA on the icy lake.')
 parser.add_argument('--iterations', type=int, default=10000, help='The number of iterations to train for, default is 10,000')
 parser.add_argument('--show_final_policy', type=bool, default=False, help='Decide whether or not to show five games at the end for the user to watch, default is False')
+parser.add_argument('--is_slippery', type=bool, default=True, help='decide if the agent has a random chance to slip or not')
+parser.add_argument('--map_size', type=str, default='4x4', help='How large you want the map to be in the format NxN')
 args = parser.parse_args()
 
 
 
 # Create the 4x4 Frozen Lake environment
-env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+env = gym.make("FrozenLake-v1", map_name=args.map_size, is_slippery=args.is_slippery)
 
 # Initialize parameters
 learning_rate = 0.1
@@ -101,7 +103,7 @@ plt.show()
 
 # run 100 times to get the win rate of the algorithm over 100 games
 # Create the 4x4 Frozen Lake environment
-env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+env = gym.make("FrozenLake-v1", map_name=args.map_size, is_slippery=args.is_slippery)
 
 wins = 0
 games = 10000
@@ -132,7 +134,7 @@ env.close()
 
 if args.show_final_policy:
 	# Create the 4x4 Frozen Lake environment
-	env = gym.make("FrozenLake-v1", render_mode="human", map_name="4x4", is_slippery=True)
+	env = gym.make("FrozenLake-v1", render_mode="human", map_name=args.map_size, is_slippery=args.is_slippery)
 
 	for episode in range(5):
 		# Reset the environment to start a new episode
