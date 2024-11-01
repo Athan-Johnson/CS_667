@@ -44,7 +44,7 @@ policy = {}
 learningRate = 0.1
 discountFactor = 0.9
 epsilon = 1.0
-epsilonDecay = 1 - (500 / args.iterations)
+epsilonDecay = 1 - (50 / args.iterations)
 min_epsilon = 0.1
 rewards = []
 epoch = args.iterations / 10
@@ -85,7 +85,7 @@ for episode in tqdm.tqdm(range(args.iterations)):
 
 	if episode % epoch == 0:
 		averageReward = 0
-		for _ in range(10):
+		for _ in range(100):
 			state, info = env.reset()
 
 			done = False
@@ -98,7 +98,7 @@ for episode in tqdm.tqdm(range(args.iterations)):
 			
 			averageReward += reward
 
-		rewards.append(averageReward / 10)
+		rewards.append(averageReward / 100)
 
 
 # Close the environment when finished
