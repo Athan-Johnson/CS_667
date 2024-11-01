@@ -3,6 +3,7 @@ import random
 import tqdm
 import argparse
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Parsing
@@ -21,22 +22,25 @@ learning_rate = 0.1
 discount_factor = 0.99
 epsilon = 1.0
 min_epsilon = 0.1
-epsilon_decay = 0.995
+epsilon_decay = 1 - (50 / args.iterations)
 num_actions = env.action_space.n
 num_states = env.observation_space.n
+rewards = []
+epoch = args.iterations / 10
+
 
 # Initialize Q-table with zeros
-Q = np.zeros((num_states, num_actions))
+policy = np.zeros((num_states, num_actions))
 
 # this is the for loop we're going to be running the training in
-for i in tqdm.tqdm(range(args.iterations)):
+for episode in tqdm.tqdm(range(args.iterations)):
 	# Reset the environment to start a new episode
 	state, info = env.reset()
 
 	if random.uniform(0, 1) < epsilon:
 		action = env.action_space.sample()
 	else:
-		action = np.argmax(Q[state, :])
+		action = np.argmax(policy[state, :])
 
 	done = False
 	while not done:
@@ -47,9 +51,9 @@ for i in tqdm.tqdm(range(args.iterations)):
 		if random.uniform(0, 1) < epsilon:
 			next_action = env.action_space.sample()
 		else:
-			next_action = np.argmax(Q[next_state, :])
+			next_action = np.argmax(policy[next_state, :])
 
-		Q[state, action] += learning_rate * (reward + discount_factor * Q[next_state, next_action] - Q[state, action])
+		policy[state, action] += learning_rate * (reward + discount_factor * policy[next_state, next_action] - policy[state, action])
 
 		state = next_state
 		action = next_action
@@ -60,10 +64,40 @@ for i in tqdm.tqdm(range(args.iterations)):
 	# Decay epsilon to reduce exploration over time
 	epsilon = max(min_epsilon, epsilon * epsilon_decay)
 
+	if episode % epoch == 0:
+		averageReward = 0
+		for _ in range(10):
+			state, info = env.reset()
+
+			done = False
+			while not done:
+				# Implenent the policy
+				action = np.argmax(policy[state, :])
+
+				# Step the environment with the chosen action
+				state, reward, done, truncated, info = env.step(action)
+			
+			averageReward += reward
+
+		rewards.append(averageReward / 10)
+
+
 
 # Close the environment when finished
 env.close()
 
+# Make the graph
+plt.plot(range(len(rewards)),
+		 rewards,
+		 linestyle="-",
+		 marker='.',
+		 label="Rewards per epoch")
+plt.grid()
+plt.legend()
+plt.xlabel('Epoch')
+plt.ylabel('Reward')
+plt.savefig('Rewards_over_epochs_SARSA.png')
+plt.show()
 
 # run 100 times to get the win rate of the algorithm over 100 games
 # Create the 4x4 Frozen Lake environment
@@ -71,14 +105,14 @@ env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
 
 wins = 0
 games = 10000
-for i in tqdm.tqdm(range(games)):
+for episode in tqdm.tqdm(range(games)):
 	# Reset the environment to start a new episode
 	state, info = env.reset()
 
 	done = False
 	while not done:
 		# Implenent the policy
-		action = np.argmax(Q[state, :])
+		action = np.argmax(policy[state, :])
 
 		# Step the environment with the chosen action
 		state, reward, done, truncated, info = env.step(action)
@@ -100,7 +134,7 @@ if args.show_final_policy:
 	# Create the 4x4 Frozen Lake environment
 	env = gym.make("FrozenLake-v1", render_mode="human", map_name="4x4", is_slippery=True)
 
-	for i in range(5):
+	for episode in range(5):
 		# Reset the environment to start a new episode
 		state, info = env.reset()
 
@@ -110,7 +144,7 @@ if args.show_final_policy:
 			env.render()
 
 			# Implement the policy
-			action = np.argmax(Q[state, :])
+			action = np.argmax(policy[state, :])
 
 			# Step the environment with the chosen action
 			state, reward, done, truncated, info = env.step(action)

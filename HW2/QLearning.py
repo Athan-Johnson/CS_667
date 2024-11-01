@@ -44,9 +44,11 @@ policy = {}
 learningRate = 0.1
 discountFactor = 0.9
 epsilon = 1.0
-epsilonDecay = 0.995
+epsilonDecay = 1 - (500 / args.iterations)
 min_epsilon = 0.1
 rewards = []
+epoch = args.iterations / 10
+
 
 # Initialize policy table with zeros
 for j in range(16):  # Assuming a 4x4 Frozen Lake (16 states)
@@ -56,11 +58,10 @@ for j in range(16):  # Assuming a 4x4 Frozen Lake (16 states)
 # this is the for loop we're going to be running the training in
 for episode in tqdm.tqdm(range(args.iterations)):
 	# Reset the environment to start a new episode
-	# the format here for our dict "policy" is obs, or the number assigned
+	# the format here for our dict "policy" is state, or the number assigned
 	# to the state we're in, and the move from that state
-	obs, info = env.reset()
-	prevObs = obs
-	cumulativeReward = 0
+	state, info = env.reset()
+	prevState = state
 
 	done = False
 	while not done:
@@ -68,38 +69,52 @@ for episode in tqdm.tqdm(range(args.iterations)):
 		if epsilon > random.random():
 			action = env.action_space.sample()
 		else:
-			action = max_with_random_tiebreaker((policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]))
-
-		cumulativeReward += policy[obs, action]
+			action = max_with_random_tiebreaker((policy[state, 0], policy[state, 1], policy[state, 2], policy[state, 3]))
 
 		# Step the environment with the chosen action
-		obs, reward, done, truncated, info = env.step(action)
+		state, reward, done, truncated, info = env.step(action)
 		# Print information about the current step
-		# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+		# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
 
-		policy[prevObs, action] += learningRate * (reward + discountFactor * max(policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]) - policy[prevObs, action])
+		policy[prevState, action] += learningRate * (reward + discountFactor * max(policy[state, 0], policy[state, 1], policy[state, 2], policy[state, 3]) - policy[prevState, action])
 
-		prevObs = obs
-		cumulativeReward += reward
+		prevState = state
 	
 	# Decay epsilon to reduce exploration over time
 	epsilon = max(min_epsilon, epsilon * epsilonDecay)
 
-	rewards.append(cumulativeReward)
+	if episode % epoch == 0:
+		averageReward = 0
+		for _ in range(10):
+			state, info = env.reset()
+
+			done = False
+			while not done:
+				# Implenent the policy
+				action = max_with_random_tiebreaker((policy[state, 0], policy[state, 1], policy[state, 2], policy[state, 3]))
+
+				# Step the environment with the chosen action
+				state, reward, done, truncated, info = env.step(action)
+			
+			averageReward += reward
+
+		rewards.append(averageReward / 10)
+
 
 # Close the environment when finished
 env.close()
 
 # Make the graph
-plt.plot(range(args.iterations),
+plt.plot(range(len(rewards)),
 		 rewards,
-		 linestyle="",
-		 marker='.')
+		 linestyle="-",
+		 marker='.',
+		 label="Rewards per epoch")
 plt.grid()
 plt.legend()
 plt.xlabel('Epoch')
 plt.ylabel('Reward')
-plt.savefig('0.png')
+plt.savefig('Rewards_over_epochs_QL.png')
 plt.show()
 
 # run 100 times to get the win rate of the algorithm over 100 games
@@ -110,18 +125,18 @@ wins = 0
 games = 10000
 for episode in tqdm.tqdm(range(games)):
 	# Reset the environment to start a new episode
-	obs, info = env.reset()
+	state, info = env.reset()
 
 	done = False
 	while not done:
 		# Implenent the policy
-		action = max_with_random_tiebreaker((policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]))
+		action = max_with_random_tiebreaker((policy[state, 0], policy[state, 1], policy[state, 2], policy[state, 3]))
 
 		# Step the environment with the chosen action
-		obs, reward, done, truncated, info = env.step(action)
+		state, reward, done, truncated, info = env.step(action)
 
 		# Print information about the current step
-		# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+		# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
 		if reward == 1:
 			wins += 1
 
@@ -139,7 +154,7 @@ if args.show_final_policy:
 
 	for episode in range(5):
 		# Reset the environment to start a new episode
-		obs, info = env.reset()
+		state, info = env.reset()
 
 		done = False
 		while not done:
@@ -147,13 +162,13 @@ if args.show_final_policy:
 			env.render()
 
 			# Implement the policy
-			action = max_with_random_tiebreaker((policy[obs, 0], policy[obs, 1], policy[obs, 2], policy[obs, 3]))
+			action = max_with_random_tiebreaker((policy[state, 0], policy[state, 1], policy[state, 2], policy[state, 3]))
 
 			# Step the environment with the chosen action
-			obs, reward, done, truncated, info = env.step(action)
+			state, reward, done, truncated, info = env.step(action)
 
 			# Print information about the current step
-			# print(f"Obs: {obs}, Reward: {reward}, Done: {done}, Info: {info}")
+			# print(f"state: {state}, Reward: {reward}, Done: {done}, Info: {info}")
 
 	# Close the environment when finished
 	env.close()
